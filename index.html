@@ -775,6 +775,25 @@ textarea{resize:vertical;min-height:90px;line-height:1.5;}
 .cv-qr svg{width:15cqw;height:15cqw;display:block;}
 .cv-qr-t{font-size:1.2cqw;font-weight:700;letter-spacing:.12em;color:var(--navy);margin-top:1cqw;}
 @media(max-width:480px){.brand-text{display:none;}.topbar .btn{padding:8px 11px;}}
+
+/* ---- หน้า 2–6 แบบ INDEX_PP ---- */
+.pp-in{display:flex;flex-direction:column;padding-bottom:13cqw !important;}
+.pp-bar{display:flex;align-items:baseline;gap:2cqw;flex:0 0 auto;}
+.pp-bar .th{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;opacity:.8;font-size:1.5cqw;}
+.pp-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 4cqw;}
+.pp-grid1 .pp-val{margin-bottom:4cqw;}
+.pp-val.sm{font-size:1.75cqw;padding:1cqw 0 .9cqw;margin-bottom:1.6cqw;}
+.pp-lh{display:grid;grid-template-columns:34% 1fr 24%;gap:0;align-items:start;margin-bottom:4cqw;}
+.pp-lh .a{padding-right:3cqw;border-right:1px solid #C2C7DC;}
+.pp-lh .a img{height:7cqw;display:block;}
+.pp-lh .a .co{font-weight:700;font-size:1.55cqw;color:var(--navy);margin-top:1.6cqw;}
+.pp-lh .a .ad{font-size:1.25cqw;color:var(--ink-soft);margin-top:.6cqw;line-height:1.5;}
+.pp-lh .b{padding:0 3cqw;border-right:1px solid #C2C7DC;}
+.pp-lh .b .t{font-family:'Sora','Noto Sans Thai';font-weight:700;font-size:2.5cqw;line-height:1.2;color:var(--navy);}
+.pp-lh .b .s{font-size:1.3cqw;color:var(--ink-soft);margin-top:1cqw;line-height:1.5;}
+.pp-lh .c{padding-left:3cqw;}
+.pp .r-photos{flex:1 1 auto;min-height:0;}
+.pp .r-tbl{margin-bottom:2cqw;}
 .btn-clear{color:#C94F4F;border-color:#F1C9C9;background:#FBEAEA;}
 .btn-clear:hover{border-color:#C94F4F;}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;max-width:90vw;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.25);}
@@ -1150,55 +1169,58 @@ function cvRow(ic, color, lbl, val){
   return '<div class="cv-row"><span class="cv-ic" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + IC[ic] + '</svg></span>' +
     '<span class="cv-lbl">' + lbl + '</span><span class="cv-val' + (val ? '' : ' empty') + '">' + (val ? esc(val) : '—') + '</span></div>';
 }
-function pageHead(title){
-  return '<div class="ip-head"><img src="' + LOGO + '" alt=""><div class="tt"><b>FCU / AHU Cleaning Report</b><span>' + esc(v('customer') || COMPANY) + '</span></div>' +
-    '<div class="no">Report No.<br><b>' + esc(v('reportNo') || '—') + '</b></div></div>';
+/* ===== หน้า 2–6 : รูปแบบเดียวกับ INDEX_PP (แถบหัวข้อน้ำเงิน + ท้ายกระดาษเดียวกันทุกหน้า) ===== */
+function ppFoot(n){
+  return '<div class="pp-foot"><span class="l">' + COMPANY + '</span><span class="c">FCU / AHU Cleaning Report · ' + esc(v('unitId') || '') + ' · หน้า ' + n + ' / 6</span><span class="r">Confidential</span></div>';
 }
-function pageFoot(n){ return '<div class="ip-foot"><span>' + COMPANY + '</span><span>' + esc(S.equipType + ' ' + v('unitId')) + ' · ' + thDate(v('reportDate')) + '</span><span>หน้า ' + n + ' / 6</span></div>'; }
-function photoPage(kind, n, step){
-  var K = KIND[kind], L = S.photos[kind];
-  return '<div class="pg">' + pageHead() + '<div class="ip-body">' +
-    '<div class="ip-title"><span class="bar" style="background:' + K.color + '"></span><h2>' + step + '. ' + K.en + ' WORK<small>รูปภาพ' + K.th + ' (' + L.filter(function(p){ return p.img; }).length + ' / ' + L.length + ')</small></h2></div>' +
+function ppPage(n, inner, extra){ return '<div class="pg pp"><div class="pp-in">' + inner + (extra || '') + ppFoot(n) + '</div></div>'; }
+function ppField(lbl, val){ return '<div><div class="pp-lbl">' + lbl + '</div><div class="pp-val">' + (val ? esc(val) : '&nbsp;') + '</div></div>'; }
+function ppLetterhead(){
+  return '<div class="pp-lh"><div class="a"><img src="' + LOGO + '" alt=""><div class="co">' + COMPANY + '</div><div class="ad">FCU / AHU Preventive &amp; Cleansing Service</div></div>' +
+    '<div class="b"><div class="t">FCU / AHU<br>Cleaning Report</div><div class="s">รายงานการล้างทำความสะอาดเครื่องส่งลมเย็น ก่อน · ระหว่าง · หลังทำงาน</div></div>' +
+    '<div class="c"><div class="pp-lbl">Report No.</div><div class="pp-val sm">' + (esc(v('reportNo')) || '&nbsp;') + '</div>' +
+      '<div class="pp-lbl">Date</div><div class="pp-val sm">' + (thDate(v('reportDate')) || '&nbsp;') + '</div></div></div>';
+}
+function photoPage(kind, n){
+  var K = KIND[kind], L = S.photos[kind], got = L.filter(function(p){ return p.img; }).length;
+  return ppPage(n,
+    '<div class="pp-bar">' + K.en + ' WORK<span class="th">รูปภาพ' + K.th + ' (' + got + ' / ' + L.length + ')</span></div>' +
     '<div class="r-photos n' + L.length + '">' + L.map(function(p, i){
       return '<div class="r-ph"><div class="im">' + (p.img ? '<div class="bgi" style="background-image:url(' + p.img + ')"></div>' : '<div class="none">ไม่มีรูป</div>') +
         '<i style="background:' + K.color + '">' + K.en + ' ' + (i + 1) + '</i></div><div class="cap">' + (esc(p.cap) || '&nbsp;') + '</div></div>';
-    }).join('') + '</div></div>' + pageFoot(n) + '</div>';
+    }).join('') + '</div>');
 }
 function buildReport(){
   var equip = [S.equipType, v('unitId')].filter(Boolean).join(' · ');
   var cover = coverHTML(COVER, coverData());
-
   var tagTxt = { ok:'ทำแล้ว', no:'ไม่ได้ทำ', na:'N/A' };
-  var scope = '<div class="pg">' + pageHead() + '<div class="ip-body">' +
-    '<div class="ip-title"><span class="bar" style="background:var(--navy)"></span><h2>2. SCOPE OF WORK<small>ขอบเขตงาน</small></h2></div>' +
-    '<div class="r-info"><div><span>ลูกค้า</span><b>' + esc(v('customer') || '—') + '</b></div><div><span>เครื่อง</span><b>' + esc(equip || '—') + '</b></div>' +
-      '<div><span>สถานที่</span><b>' + esc(v('location') || '—') + '</b></div><div><span>วันที่</span><b>' + (thDate(v('reportDate')) || '—') + '</b></div></div>' +
+
+  var scope = ppPage(2,
+    ppLetterhead() +
+    '<div class="pp-bar">Information</div>' +
+    '<div class="pp-grid3">' + ppField('Customer / ลูกค้า', v('customer')) + ppField('Equipment / เครื่อง', equip) + ppField('Site location / สถานที่', v('location')) + '</div>' +
+    '<div style="height:1cqw"></div>' +
     '<table class="r-tbl"><tr><th>#</th><th>รายละเอียดงาน</th><th>สถานะ</th></tr>' +
       S.scope.filter(function(x){ return x.t.trim(); }).map(function(x, i){
         return '<tr><td>' + (i + 1) + '</td><td>' + esc(x.t) + '</td><td><span class="tag ' + x.s + '">' + tagTxt[x.s] + '</span></td></tr>';
-      }).join('') + '</table></div>' + pageFoot(2) + '</div>';
+      }).join('') + '</table>');
 
-  var cnt = function(k){ return S.photos[k].filter(function(p){ return p.img; }).length; };
-  var done = S.scope.filter(function(x){ return x.t.trim() && x.s === 'ok'; }).length, all = S.scope.filter(function(x){ return x.t.trim(); }).length;
-  /* หน้าสุดท้าย — รูปแบบเดียวกับหน้า Sign off ของ INDEX_PP */
   var now = new Date(), ct = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
   var emps = (S.employees || []);
-  var summary = '<div class="pg pp"><div class="pp-in">' +
-    '<div class="pp-bar">Summary</div>' +
+  var summary = ppPage(6,
+    '<div class="pp-bar">Summary<span class="th">สรุปผลการทำงาน</span></div>' +
     '<div class="pp-lbl">Summary / สรุปผลการทำงาน และข้อเสนอแนะ</div>' +
     '<div class="pp-val pp-sum">' + (esc(v('summary')) || '&nbsp;') + '</div>' +
-    '<div class="pp-bar" style="margin-top:5cqw">Sign off</div>' +
+    '<div class="pp-bar" style="margin-top:5cqw">Sign off<span class="th">ลงนามรับงาน</span></div>' +
     '<div class="pp-grid">' +
       '<div><div class="pp-lbl">List of employees / ชื่อผู้ให้บริการ</div><div class="pp-emps">' +
-        emps.map(function(n, k){ return '<div>' + esc(n) + (k === 0 ? ' <span class="pp-lead">หัวหน้างาน</span>' : '') + '</div>'; }).join('') + '</div></div>' +
+        emps.map(function(nm, k){ return '<div>' + esc(nm) + (k === 0 ? ' <span class="pp-lead">หัวหน้างาน</span>' : '') + '</div>'; }).join('') + '</div></div>' +
       '<div><div class="pp-lbl">Client name / รายชื่อลูกค้า</div><div class="pp-val">' + (esc(v('clientName')) || '&nbsp;') + '</div>' +
         '<div class="pp-lbl">Client signature / ลายเซ็นต์ลูกค้า</div><div class="pp-sig">' + (S.sig ? '<div class="sg" style="background-image:url(' + S.sig + ')"></div>' : '') + '</div></div>' +
-    '</div>' +
-    '<div class="pp-ct">Create time | ' + ct + '</div>' +
-    '<div class="pp-foot"><span class="l">' + COMPANY + '</span><span class="c">FCU / AHU Cleaning Report</span><span class="r">Confidential</span></div>' +
-  '</div></div>';
+    '</div>', '<div class="pp-ct">Create time | ' + ct + '</div>');
 
-  return cover + scope + photoPage('before', 3, 3) + photoPage('during', 4, 4) + photoPage('after', 5, 5) + summary;
+  return cover + scope + photoPage('before', 3) + photoPage('during', 4) + photoPage('after', 5) + summary;
+
 }
 function openPreview(){
   $('#pvPages').innerHTML = buildReport();
