@@ -1340,17 +1340,59 @@ $('#pvLine').onclick = function(){
     .catch(function(e){ btn.disabled = false; btn.textContent = label; toast('สร้าง PDF ไม่สำเร็จ: ' + (e && e.message || e), 6000); });
 };
 window.__buildPdf = function(){ return ensurePdfLibs().then(function(){ return buildPdf(); }); };
-/* ---- ส่ง Report → Google Sheet (ต่อ Apps Script ภายหลัง) ---- */
+/* ---- ส่ง Report → Google Drive ผ่าน Apps Script ตัวเดียวกับ INDEX_PP (ลูกค้า SONY → โฟลเดอร์ SONY) ---- */
+var DRIVE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz1aedRo-FNsubFpitC515Z2L4Tztwom95RK02bDvQsik2RSURuN8n8Pr3UzXm6MFb2sA/exec';
+var DRIVE_SECRET = 'Mask3D@2023#$';
+function blobToBase64(blob){
+  return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ var s = String(r.result); res(s.slice(s.indexOf(',') + 1)); }; r.onerror = rej; r.readAsDataURL(blob); });
+}
+function reportMeta(){
+  var no = v('reportNo'), job = v('jobDetail');
+  return {
+    customer: 'SONY',
+    date:     v('reportDate') || new Date().toISOString().slice(0, 10),
+    type:     S.equipType || 'FCU',
+    site:     '',
+    location: v('location'),
+    company:  '',
+    contract: '',
+    title:    [no, v('unitId'), job].filter(Boolean).join(' - ') || 'FCU / AHU Cleaning Report',
+    reportNo: no,
+    rev:      '',
+    job:      job,
+    unit:     v('unitId')
+  };
+}
+function uploadToDrive(blob, name){
+  return blobToBase64(blob).then(function(b64){
+    var body = JSON.stringify({ secret: DRIVE_SECRET, name: name, data: b64, meta: reportMeta() });
+    return fetch(DRIVE_ENDPOINT, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: body })
+      .then(function(r){ return r.text(); })
+      .then(function(t){ var o = null; try{ o = JSON.parse(t); }catch(e){} if(o && o.ok) return o; if(o && o.error) throw new Error(o.error); throw new Error('ปลายทางตอบกลับไม่ถูกต้อง'); })
+      .catch(function(err){
+        /* บางเบราว์เซอร์อ่านคำตอบจาก Apps Script ไม่ได้ทั้งที่ไฟล์ส่งถึงแล้ว — ส่งซ้ำแบบไม่อ่านคำตอบ (เหมือน INDEX_PP) */
+        return fetch(DRIVE_ENDPOINT, { method:'POST', mode:'no-cors', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: body })
+          .then(function(){ return { ok:true, blind:true }; }, function(){ throw err; });
+      });
+  });
+}
+function getPdf(onStep){
+  var key = reportKey();
+  if(pdfCache && pdfCache.key === key) return Promise.resolve(pdfCache);
+  return ensurePdfLibs().then(function(){ return buildPdf(onStep); }).then(function(blob){ pdfCache = { key:key, blob:blob, name:pdfName() }; return pdfCache; });
+}
 $('#pvSend').onclick = function(){
   if(!check()) return;
-  if(!ENDPOINT){ toast('ไฟล์ตัวอย่าง: ยังไม่ได้ต่อ Google Sheet (ใส่ ENDPOINT ภายหลัง)', 4500); return; }
-  var btn = this; btn.disabled = true; btn.textContent = 'กำลังส่ง…';
-  var f = {}; FIELDS.forEach(function(id){ f[id] = v(id); });
-  fetch(ENDPOINT, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-    body: JSON.stringify({ fields:f, equipType:S.equipType, scope:S.scope, photos:S.photos, signature:S.sig }) })
-    .then(function(r){ return r.json(); })
-    .then(function(j){ if(!j.ok) throw new Error(j.error || 'ส่งไม่สำเร็จ'); toast('ส่ง Report เรียบร้อย', 4000); btn.textContent = '✓ ส่งแล้ว'; })
-    .catch(function(e){ toast('ส่งไม่สำเร็จ: ' + e.message, 5000); btn.disabled = false; btn.textContent = 'ส่ง Report'; });
+  var btn = this, label = 'ส่ง Report';
+  btn.disabled = true; btn.textContent = 'กำลังสร้าง PDF…';
+  getPdf(function(i, n){ btn.textContent = 'สร้าง PDF ' + i + '/' + n + '…'; })
+    .then(function(p){ btn.textContent = 'กำลังส่งเข้า Drive…'; return uploadToDrive(p.blob, p.name); })
+    .then(function(out){
+      btn.disabled = false; btn.textContent = '✓ ส่งแล้ว';
+      toast(out.blind ? 'ส่งไฟล์เข้า Google Drive (SONY) แล้ว — ตรวจในโฟลเดอร์ได้เลย' : 'บันทึก Report ลง Google Drive โฟลเดอร์ SONY เรียบร้อย', 5000);
+      setTimeout(function(){ btn.textContent = label; }, 4000);
+    })
+    .catch(function(e){ btn.disabled = false; btn.textContent = label; toast('ส่งไม่สำเร็จ: ' + (e && e.message || e), 6000); });
 };
 
 /* ================= COVER DESIGNS (10 แบบ) ================= */
