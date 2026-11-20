@@ -1331,9 +1331,44 @@ function pdfName(){
   var unit = (v('unitId') || 'UNIT').toUpperCase().replace(/[^A-Z0-9\-]+/g, '-');
   return 'PM_' + unit + ' ' + (v('reportDate') || new Date().toISOString().slice(0, 10)) + '.pdf';
 }
+/* รูปในหน้า 3-5: ตัดแบบ cover จากรูปต้นฉบับ (ไม่ผ่านการย่อของ html2canvas) แล้ววางทับในตำแหน่งเดิม
+   มุมโค้งของกรอบใช้พื้นจากภาพหน้าเดิม และป้าย BEFORE/AFTER วางทับอีกชั้นให้อยู่บนสุดเหมือนเดิม */
+var PHOTO_MAX = 1280, PHOTO_Q = .88;
+function loadImg(src){ return new Promise(function(res, rej){ var im = new Image(); im.onload = function(){ res(im); }; im.onerror = rej; im.src = src; }); }
+function photoLayers(el, cv){
+  var pr = el.getBoundingClientRect(), k = cv.width / pr.width, mm = 210 / pr.width, jobs = [];
+  $$('.r-ph .bgi', el).forEach(function(ph){
+    var m = /url\(["']?(.*?)["']?\)/.exec(ph.style.backgroundImage || ''), r = ph.getBoundingClientRect();
+    if(!m || r.width < 4 || r.height < 4) return;
+    jobs.push(loadImg(m[1]).then(function(im){
+      var iw = im.naturalWidth, ih = im.naturalHeight, s = Math.max(r.width / iw, r.height / ih);
+      var sw = r.width / s, sh = r.height / s, sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+      var W = Math.round(Math.min(sw, PHOTO_MAX)), H = Math.round(W * r.height / r.width), f = W / r.width;
+      var c = document.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d');
+      g.drawImage(cv, (r.left - pr.left) * k, (r.top - pr.top) * k, r.width * k, r.height * k, 0, 0, W, H);
+      var box = ph.closest('.r-ph'), b = box.getBoundingClientRect(), cs = getComputedStyle(box);
+      var bw = parseFloat(cs.borderTopWidth) || 0, rad = Math.max(0, (parseFloat(cs.borderTopLeftRadius) || 0) - bw) * f;
+      var x0 = (b.left + bw - r.left) * f, y0 = (b.top + bw - r.top) * f, x1 = (b.right - bw - r.left) * f, y1 = (b.bottom - bw - r.top) * f;
+      g.save(); g.beginPath();
+      g.moveTo(x0 + rad, y0); g.lineTo(x1 - rad, y0); g.arcTo(x1, y0, x1, y0 + rad, rad); g.lineTo(x1, y1 - rad); g.arcTo(x1, y1, x1 - rad, y1, rad);
+      g.lineTo(x0 + rad, y1); g.arcTo(x0, y1, x0, y1 - rad, rad); g.lineTo(x0, y0 + rad); g.arcTo(x0, y0, x0 + rad, y0, rad); g.closePath(); g.clip();
+      g.imageSmoothingQuality = 'high'; g.drawImage(im, sx, sy, sw, sh, 0, 0, W, H); g.restore();
+      var out = [{ data: c.toDataURL('image/jpeg', PHOTO_Q), x: (r.left - pr.left) * mm, y: (r.top - pr.top) * mm, w: r.width * mm, h: r.height * mm }];
+      c.width = c.height = 1;
+      $$('i', ph.parentNode).forEach(function(t){
+        var q = t.getBoundingClientRect(), tc = document.createElement('canvas');
+        tc.width = Math.max(1, Math.round(q.width * k)); tc.height = Math.max(1, Math.round(q.height * k));
+        tc.getContext('2d').drawImage(cv, (q.left - pr.left) * k, (q.top - pr.top) * k, q.width * k, q.height * k, 0, 0, tc.width, tc.height);
+        out.push({ data: tc.toDataURL('image/jpeg', .95), x: (q.left - pr.left) * mm, y: (q.top - pr.top) * mm, w: q.width * mm, h: q.height * mm });
+      });
+      return out;
+    }, function(){ return []; }));
+  });
+  return Promise.all(jobs).then(function(a){ return [].concat.apply([], a); });
+}
 function buildPdf(onStep){
   var pages = $$('#pvPages .pg'), onPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
-  var TARGET = onPhone ? 1240 : 1654, Q = onPhone ? .86 : .92;
+  var TARGET = onPhone ? 1654 : 2067, Q = onPhone ? .88 : .92;
   var pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4', orientation:'portrait', compress:true });
   document.documentElement.classList.add('exporting');
   var start = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
@@ -1342,7 +1377,15 @@ function buildPdf(onStep){
       if(onStep) onStep(i + 1, pages.length);
       var w = el.getBoundingClientRect().width;
       return window.html2canvas(el, { scale: TARGET / w, useCORS:true, backgroundColor:'#ffffff', logging:false })
-        .then(function(cv){ if(i > 0) pdf.addPage(); pdf.addImage(cv.toDataURL('image/jpeg', Q), 'JPEG', 0, 0, 210, 297, undefined, 'FAST'); cv.width = cv.height = 1; });
+        .then(function(cv){
+          if(i > 0) pdf.addPage();
+          pdf.addImage(cv.toDataURL('image/jpeg', Q), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+          /* วางรูปงานความละเอียดเต็มทับลงไปตรง ๆ (html2canvas ย่อรูปจนเบลอ) */
+          return photoLayers(el, cv).then(function(L){
+            L.forEach(function(o){ pdf.addImage(o.data, 'JPEG', o.x, o.y, o.w, o.h, undefined, 'FAST'); });
+            cv.width = cv.height = 1;
+          });
+        });
     });
   }, start).then(function(){ document.documentElement.classList.remove('exporting'); return pdf.output('blob'); },
                  function(e){ document.documentElement.classList.remove('exporting'); throw e; });
