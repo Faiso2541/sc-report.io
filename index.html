@@ -1267,7 +1267,13 @@ function openPreview(){
 }
 $('#pvBtn').onclick = openPreview;
 $('#pvClose').onclick = function(){ $('#pv').hidden = true; document.body.style.overflow = ''; };
-$('#pvPrint').onclick = function(){ window.print(); };
+/* ชื่อไฟล์ตอน "บันทึกเป็น PDF" มาจากชื่อหน้าเว็บ — เปลี่ยนชั่วคราวให้ตรงกับชื่อไฟล์รายงาน */
+var baseTitle = document.title;
+function setPrintTitle(){ document.title = pdfName().replace(/\.pdf$/i, ''); }
+function resetTitle(){ document.title = baseTitle; }
+window.addEventListener('beforeprint', function(){ if(!$('#pv').hidden) setPrintTitle(); });
+window.addEventListener('afterprint', resetTitle);
+$('#pvPrint').onclick = function(){ setPrintTitle(); window.print(); setTimeout(resetTitle, 1500); };
 
 /* ---- ตรวจก่อนส่ง ---- */
 function check(){
@@ -1303,7 +1309,11 @@ function ensurePdfLibs(){
   if(!libsReady) libsReady = PDF_LIBS.reduce(function(p, lib){ return p.then(function(){ return loadLib(lib); }); }, Promise.resolve()).catch(function(e){ libsReady = null; throw e; });
   return libsReady;
 }
-function pdfName(){ return ['SONY', S.equipType, v('unitId') || 'UNIT', v('reportDate')].filter(Boolean).join('_').replace(/[^\w\-]+/g, '-') + '.pdf'; }
+/* ชื่อไฟล์: PM_รหัสเครื่อง วันที่  เช่น  PM_WF3-FCU-5 2026-11-20.pdf */
+function pdfName(){
+  var unit = (v('unitId') || 'UNIT').toUpperCase().replace(/[^A-Z0-9\-]+/g, '-');
+  return 'PM_' + unit + ' ' + (v('reportDate') || new Date().toISOString().slice(0, 10)) + '.pdf';
+}
 function buildPdf(onStep){
   var pages = $$('#pvPages .pg'), onPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
   var TARGET = onPhone ? 1240 : 1654, Q = onPhone ? .86 : .92;
@@ -1361,7 +1371,11 @@ $('#pvLine').onclick = function(){
     .catch(function(e){ btn.disabled = false; btn.textContent = label; toast('สร้าง PDF ไม่สำเร็จ: ' + (e && e.message || e), 6000); });
 };
 window.__buildPdf = function(){ return ensurePdfLibs().then(function(){ return buildPdf(); }); };
-/* ---- ส่ง Report → Google Drive ผ่าน Apps Script ตัวเดียวกับ INDEX_PP (ลูกค้า SONY → โฟลเดอร์ SONY) ---- */
+/* ---- ส่ง Report → Google Drive ผ่าน Apps Script ตัวเดียวกับ INDEX_PP ----
+   ส่งเป็นลูกค้า Other + ไซต์คงที่ → ไฟล์ลง  Online from report / Other / SONY Preventive AHU FCU
+   (Apps Script แปลงเครื่องหมาย / ในชื่อโฟลเดอร์เป็นช่องว่าง) */
+var DRIVE_CUSTOMER = 'Other';
+var DRIVE_SITE = 'SONY Preventive AHU/FCU';
 var DRIVE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz1aedRo-FNsubFpitC515Z2L4Tztwom95RK02bDvQsik2RSURuN8n8Pr3UzXm6MFb2sA/exec';
 var DRIVE_SECRET = 'Mask3D@2023#$';
 function blobToBase64(blob){
@@ -1370,10 +1384,10 @@ function blobToBase64(blob){
 function reportMeta(){
   var no = v('reportNo'), job = v('jobDetail');
   return {
-    customer: 'SONY',
+    customer: DRIVE_CUSTOMER,
     date:     v('reportDate') || new Date().toISOString().slice(0, 10),
     type:     S.equipType || 'FCU',
-    site:     '',
+    site:     DRIVE_SITE,
     location: v('location'),
     company:  '',
     contract: '',
@@ -1410,7 +1424,7 @@ $('#pvSend').onclick = function(){
     .then(function(p){ btn.textContent = 'กำลังส่งเข้า Drive…'; return uploadToDrive(p.blob, p.name); })
     .then(function(out){
       btn.disabled = false; btn.textContent = '✓ ส่งแล้ว';
-      toast(out.blind ? 'ส่งไฟล์เข้า Google Drive (SONY) แล้ว — ตรวจในโฟลเดอร์ได้เลย' : 'บันทึก Report ลง Google Drive โฟลเดอร์ SONY เรียบร้อย', 5000);
+      toast((out.blind ? 'ส่งไฟล์เข้า Google Drive แล้ว' : 'บันทึก Report ลง Google Drive เรียบร้อย') + ' — Other / SONY Preventive AHU FCU', 5000);
       setTimeout(function(){ btn.textContent = label; }, 4000);
     })
     .catch(function(e){ btn.disabled = false; btn.textContent = label; toast('ส่งไม่สำเร็จ: ' + (e && e.message || e), 6000); });
@@ -1471,7 +1485,7 @@ function coverRaw(n, D){
       '<div class="top"><span class="chip-logo"><img src="' + LOGO + '" alt=""></span><div class="tag">TECHNICAL DOCUMENT<b>' + esc(D.no || 'REPORT') + '</b></div></div>' +
       '<h1 class="ttl">' + TTL + '</h1><div class="sub-th">' + SUBTH + '</div>' +
       '<div class="low"><div class="fl">' + fv('Customer', D.customer) + fv('Job Details', D.job) + fv('Site Location', D.loc) + fv('Equipment', D.equip) + fv('Report Date', D.date) + fv('Prepared by', D.by) + '</div>' +
-      '<div class="pfor">' + (v('unitId') ? '<div class="cv-qr">' + qrSvg(unitUrl(v('unitId'), S.equipType, v('location'))) + '<div class="cv-qr-t">SCAN · ' + esc(v('unitId')) + '</div></div>' : '') +
+      '<div class="pfor">' + (v('unitId') ? '<div class="cv-qr">' + qrSvg(unitUrl(v('unitId'), S.equipType, v('location'))) + '<div class="cv-qr-t">' + esc(v('unitId')) + '</div></div>' : '') +
         '<div class="f-lbl">Prepared for</div>' + custImg(D) + '</div></div></div></div>';
   case 11: return '<div class="pg c5 c11"><div class="bg">' + phImg(D.after, '') + '</div><div class="bg2"></div><div class="in">' +
       '<div class="top"><span class="chip-logo"><img src="' + LOGO + '" alt=""></span><div class="tag">TECHNICAL DOCUMENT<b>' + esc(D.no || 'REPORT') + '</b></div></div>' +
@@ -1547,7 +1561,7 @@ function coverRaw(n, D){
 }
 
 /* ---------- หน้าปกชุดใหม่ 21-30 ---------- */
-function qrB(lbl){ var u = v('unitId'); if(!u) return ''; return '<div class="qrb">' + qrSvg(unitUrl(u, S.equipType, v('location'))) + (lbl === false ? '' : '<div class="t">SCAN · ' + esc(u) + '</div>') + '</div>'; }
+function qrB(lbl){ var u = v('unitId'); if(!u) return ''; return '<div class="qrb">' + qrSvg(unitUrl(u, S.equipType, v('location'))) + (lbl === false ? '' : '<div class="t">' + esc(u) + '</div>') + '</div>'; }
 function phB(src, extra){ return '<div class="ph-box"' + (extra || '') + '>' + phImg(src, '') + '</div>'; }
 function firstImg(k, i){ var L = S.photos[k].filter(function(x){ return x.img; }); return L[i || 0] ? L[i || 0].img : ''; }
 function cnt(k){ return S.photos[k].filter(function(x){ return x.img; }).length; }
