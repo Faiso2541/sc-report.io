@@ -794,6 +794,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.5;}
 .pp-lh .c{padding-left:3cqw;}
 .pp .r-photos{flex:1 1 auto;min-height:0;}
 .pp .r-tbl{margin-bottom:2cqw;}
+.r-scope th:last-child,.r-scope td:last-child{text-align:left !important;width:auto !important;}
+.sc-row{align-items:flex-start;flex-wrap:nowrap !important;}
+.sc-row .sc-no{padding-top:6px;}
+.sc-row textarea{flex:1;min-width:0;border:none !important;background:transparent !important;box-shadow:none !important;padding:4px 0 !important;font-size:14px;line-height:1.5;resize:none;min-height:0;overflow:hidden;}
+.sc-row .sc-del{margin-top:2px;}
 .btn-clear{color:#C94F4F;border-color:#F1C9C9;background:#FBEAEA;}
 .btn-clear:hover{border-color:#C94F4F;}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;max-width:90vw;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.25);}
@@ -851,11 +856,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.5;}
   <!-- 2 SCOPE -->
   <section class="card" data-step="2" hidden>
     <div class="sec-bar"><span class="num">02</span> Scope of Work <span class="th">ขอบเขตงาน</span></div>
-    <div class="sec-note">แก้ข้อความได้ทุกบรรทัด กดสถานะ ✓ ทำแล้ว / ✕ ไม่ได้ทำ / N/A และเพิ่มรายการได้</div>
+    <div class="sec-note">เลือกชุดสโคปตามชนิดคอยล์ (ระบบเลือกให้ตามรหัสเครื่อง) · แก้ข้อความ ลบ หรือเพิ่มรายการได้</div>
+    <div class="pill-row" id="scopeKind" style="margin-bottom:14px"><span class="pill" data-v="std">FCU / AHU · คอยล์น้ำเย็น (7 ข้อ)</span><span class="pill" data-v="ref">SFCU / SAHU · คอยล์น้ำยา (10 ข้อ)</span></div>
     <div class="scope" id="scopeList"></div>
     <div class="add-row">
       <button class="add-btn" id="scopeAdd" type="button">＋ เพิ่มสโคปงาน</button>
-      <button class="add-btn" id="scopeReset" type="button">↺ ใช้รายการมาตรฐาน</button>
     </div>
   </section>
 
@@ -981,15 +986,27 @@ function toast(m, ms){ var t = $('.toast'); if(!t){ t = document.createElement('
   t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(function(){ t.hidden = true; }, ms || 3000); }
 
 /* ================= STATE ================= */
-var DEFAULT_SCOPE = [
-  'ตรวจสอบสภาพเครื่องและวัดค่าก่อนล้าง',
-  'ถอดและล้างแผ่นกรองอากาศ (Air Filter)',
-  'ล้างทำความสะอาดแผงคอยล์เย็น (Cooling Coil)',
-  'ล้างถาดน้ำทิ้งและท่อน้ำทิ้ง (Drain Pan / Drain Pipe)',
-  'ทำความสะอาดใบพัดและโบลเวอร์ (Blower)',
-  'ตรวจสอบมอเตอร์ สายไฟ และจุดต่อทางไฟฟ้า',
-  'ทดสอบเดินเครื่องและตรวจวัดค่าหลังล้าง'
+var SCOPE_STD = [
+  'ค่าแรงลม หัวจ่าย',
+  'ทำความสะอาด Filter และตรวจเช็คสภาพท่อส่งลมเย็น, หัวจ่ายลมและช่องลมกลับ',
+  'ตรวจสอบสภาพ คอยล์เย็น และทำความสะอาดด้วยการฉีดน้ำแรงดันสูง',
+  'ตรวจสอบสภาพมอเตอร์ ใบพัดลม ฉีดล้าง และวัดกระแสไฟฟ้ามอเตอร์',
+  'ตรวจสอบสภาพรีโมท Thermo room 2way valve ตู้ควบคุมและอุปกรณ์ไฟฟ้า',
+  'ตรวจสอบสภาพและทำความสะอาด ถาดน้ำทิ้ง ท่อน้ำทิ้ง ปั้มน้ำทิ้งและการระบายของน้ำทิ้ง',
+  'ตรวจเช็คตัวเครื่อง, บริเวณรอบตัวเครื่อง และทำความสะอาด'
 ];
+/* SFCU / SAHU คอยล์น้ำยา = 7 ข้อแรก + 3 ข้อของชุดคอยล์ร้อน/คอมเพรสเซอร์ */
+var SCOPE_REF = SCOPE_STD.concat([
+  'ตรวจสอบสภาพและฉีดล้างคอยล์ร้อนด้วยการฉีดน้ำแรงดันสูง',
+  'ตรวจเช็คและวัดค่ากระแสไฟฟ้าคอมเพลสเซอร์',
+  'ตรวจวัดแรงดันสารทำความเย็นภายในระบบ'
+]);
+var DEFAULT_SCOPE = SCOPE_STD;
+/* เครื่องในลิสต์ PM ที่เป็นคอยล์น้ำยา (Type มีคำว่า Refrigerant) */
+var REF_UNITS = ["B-FCU-1-16", "B-FCU-1-17", "B-FCU-2-1", "B-FCU-2-10", "B-FCU-2-11", "B-FCU-2-12", "B-FCU-2-13", "B-FCU-2-14", "B-FCU-2-15", "B-FCU-2-2", "B-FCU-2-3", "B-FCU-2-4", "B-FCU-2-5", "B-FCU-2-6", "B-FCU-2-7", "B-FCU-2-8", "B-FCU-2-9", "WF3-FCU-1", "WF3-FCU-2", "WF3-FCU-3", "WF3-FCU-4", "WF3-FCU-5"];
+function scopeKindFor(unit){ return REF_UNITS.indexOf(String(unit || '').toUpperCase()) > -1 ? 'ref' : 'std'; }
+function scopeList(kind){ return (kind === 'ref' ? SCOPE_REF : SCOPE_STD).map(function(t){ return { t:t, s:'ok' }; }); }
+
 var N = { before:6, during:6, after:6 };
 var KIND = {
   before:{ th:'ก่อนทำงาน', en:'BEFORE', color:'var(--c-before)' },
@@ -999,14 +1016,14 @@ var KIND = {
 var FIELDS = ['reportNo','reportDate','customer','location','unitId','jobDetail','summary','clientName'];
 var S = {
   step: 1, equipType: 'FCU',
-  scope: DEFAULT_SCOPE.map(function(t){ return { t:t, s:'ok' }; }),
+  scope: scopeList('std'), scopeKind: '',
   photos: { before:blank(6), during:blank(6), after:blank(6) },
   sig: null, employees: []
 };
 function blank(n){ var a = []; for(var i = 0; i < n; i++) a.push({ img:'', cap:'' }); return a; }
 
 /* ---- draft (เก็บในเครื่อง กันข้อมูลหาย) ---- */
-var KEY = 'mceSonyFcuReportDraft';
+var KEY = 'mceSonyFcuReportDraft2';
 function saveDraft(){
   var d = { S:S, f:{} }; FIELDS.forEach(function(id){ d.f[id] = $('#' + id).value; });
   try{ localStorage.setItem(KEY, JSON.stringify(d)); }
@@ -1039,7 +1056,7 @@ function stepDone(k){
   if(k === 6) return !!(S.sig && $('#clientName').value);
 }
 function goStep(k){
-  S.step = k; if(k === 1) picksLater();
+  S.step = k; setTimeout(function(){ $$('#scopeList textarea').forEach(fitTA); }, 0); if(k === 1) picksLater();
   $$('section[data-step]').forEach(function(s){ s.hidden = +s.dataset.step !== k; });
   $('#prevBtn').disabled = k === 1;
   $('#nextBtn').textContent = k === 6 ? 'ดูตัวอย่างก่อนส่ง' : 'ถัดไป ›';
@@ -1061,26 +1078,26 @@ function bindPills(){
 FIELDS.forEach(function(id){ $('#' + id).addEventListener('input', function(){ dirty(); if(S.step === 1) picksLater(); if(id === 'customer' || id === 'unitId' || id === 'clientName') drawSteps(); }); });
 
 /* ================= 2. SCOPE ================= */
+function fitTA(t){ if(!t.offsetParent) return; t.style.height = 'auto'; if(t.scrollHeight) t.style.height = t.scrollHeight + 'px'; }
 function drawScope(){
   $('#scopeList').innerHTML = S.scope.map(function(x, i){
     return '<div class="sc-row"><span class="sc-no">' + (i + 1) + '</span>' +
-      '<input type="text" data-i="' + i + '" value="' + esc(x.t) + '" placeholder="รายละเอียดงาน">' +
-      '<span class="sc-st">' + [['ok','✓ ทำแล้ว'],['no','✕ ไม่ได้ทำ'],['na','N/A']].map(function(o){
-        return '<button type="button" class="' + o[0] + (x.s === o[0] ? ' on' : '') + '" data-i="' + i + '" data-s="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</span>' +
+      '<textarea rows="1" data-i="' + i + '" placeholder="รายละเอียดงาน">' + esc(x.t) + '</textarea>' +
       '<button class="sc-del" type="button" data-del="' + i + '">ลบ</button></div>';
   }).join('');
-  $$('#scopeList input').forEach(function(inp){ inp.oninput = function(){ S.scope[+inp.dataset.i].t = inp.value; dirty(); }; });
-  $$('#scopeList .sc-st button').forEach(function(b){ b.onclick = function(){ S.scope[+b.dataset.i].s = b.dataset.s; drawScope(); dirty(); }; });
+  $$('#scopeList textarea').forEach(function(inp){ var fit = function(){ fitTA(inp); }; fit(); inp.oninput = function(){ fit(); S.scope[+inp.dataset.i].t = inp.value; dirty(); }; });
+  $$('#scopeKind .pill').forEach(function(p){ p.classList.toggle('on', p.dataset.v === S.scopeKind); });
   $$('#scopeList .sc-del').forEach(function(b){ b.onclick = function(){ S.scope.splice(+b.dataset.del, 1); drawScope(); dirty(); }; });
 }
 $('#scopeAdd').onclick = function(){
   S.scope.push({ t:'', s:'ok' }); drawScope(); dirty();
-  var ins = $$('#scopeList input'); ins[ins.length - 1].focus();
+  var ins = $$('#scopeList textarea'); ins[ins.length - 1].focus();
 };
-$('#scopeReset').onclick = function(){
-  if(!confirm('แทนที่รายการทั้งหมดด้วยรายการมาตรฐาน?')) return;
-  S.scope = DEFAULT_SCOPE.map(function(t){ return { t:t, s:'ok' }; }); drawScope(); dirty();
-};
+$$('#scopeKind .pill').forEach(function(p){ p.onclick = function(){
+  if(p.dataset.v === S.scopeKind) return;
+  S.scopeKind = p.dataset.v; S.scope = scopeList(S.scopeKind); drawScope(); dirty();
+  toast('ใช้สโคป ' + (S.scopeKind === 'ref' ? 'SFCU / SAHU คอยล์น้ำยา (10 ข้อ)' : 'FCU / AHU คอยล์น้ำเย็น (7 ข้อ)'));
+}; });
 
 /* ================= 3-5. PHOTOS ================= */
 function drawPhotos(kind){
@@ -1200,9 +1217,9 @@ function buildReport(){
     '<div class="pp-bar">Information</div>' +
     '<div class="pp-grid3">' + ppField('Customer / ลูกค้า', v('customer')) + ppField('Equipment / เครื่อง', equip) + ppField('Site location / สถานที่', v('location')) + '</div>' +
     '<div style="height:1cqw"></div>' +
-    '<table class="r-tbl"><tr><th>#</th><th>รายละเอียดงาน</th><th>สถานะ</th></tr>' +
+    '<table class="r-tbl r-scope"><tr><th>#</th><th>รายละเอียดงาน / Scope of work' + (S.scopeKind === 'ref' ? ' — SFCU / SAHU Coil (คอยล์น้ำยา)' : '') + '</th></tr>' +
       S.scope.filter(function(x){ return x.t.trim(); }).map(function(x, i){
-        return '<tr><td>' + (i + 1) + '</td><td>' + esc(x.t) + '</td><td><span class="tag ' + x.s + '">' + tagTxt[x.s] + '</span></td></tr>';
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(x.t) + '</td></tr>';
       }).join('') + '</table>');
 
   var now = new Date(), ct = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
@@ -1667,6 +1684,8 @@ function defJob(){ var t = S.equipType && S.equipType !== 'อื่น ๆ' ? S
 function isDefJob(x){ return !x || /^Preventive and Cleansing \S+$/.test(x); }
 if(isDefJob($('#jobDetail').value)) $('#jobDetail').value = defJob();
 $$('#equipType .pill').forEach(function(p){ p.addEventListener('click', function(){ if(isDefJob($('#jobDetail').value)){ $('#jobDetail').value = defJob(); dirty(); picksLater(); } }); });
+if(!S.scopeKind){ S.scopeKind = scopeKindFor($('#unitId').value); S.scope = scopeList(S.scopeKind); drawScope(); }
+$('#unitId').addEventListener('change', function(){ var k = scopeKindFor(this.value); if(k !== S.scopeKind){ S.scopeKind = k; S.scope = scopeList(k); drawScope(); dirty(); } });
 if(had) toast('เปิดงานที่ทำค้างไว้ต่อ');
 })();
 </script>
