@@ -1010,9 +1010,9 @@ var SCOPE_REF = SCOPE_STD.concat([
 ]);
 var DEFAULT_SCOPE = SCOPE_STD;
 /* เครื่องในลิสต์ PM ที่เป็นคอยล์น้ำยา (Type มีคำว่า Refrigerant) */
-var REF_UNITS = ["B-FCU-1-16", "B-FCU-1-17", "B-FCU-2-1", "B-FCU-2-10", "B-FCU-2-11", "B-FCU-2-12", "B-FCU-2-13", "B-FCU-2-14", "B-FCU-2-15", "B-FCU-2-2", "B-FCU-2-3", "B-FCU-2-4", "B-FCU-2-5", "B-FCU-2-6", "B-FCU-2-7", "B-FCU-2-8", "B-FCU-2-9", "WF3-FCU-1", "WF3-FCU-2", "WF3-FCU-3", "WF3-FCU-4", "WF3-FCU-5"];
+var REF_UNITS = ["B-FCU-1-16", "B-FCU-1-17", "B-FCU-2-1", "B-FCU-2-10", "B-FCU-2-11", "B-FCU-2-12", "B-FCU-2-13", "B-FCU-2-14", "B-FCU-2-15", "B-FCU-2-2", "B-FCU-2-3", "B-FCU-2-4", "B-FCU-2-5", "B-FCU-2-6", "B-FCU-2-7", "B-FCU-2-8", "B-FCU-2-9", "WF2-FCU-1-15", "WF2-FCU-1-16", "WF2-FCU-1-17", "WF2-FCU-1-18", "WF2-FCU-2-1", "WF3-FCU-1", "WF3-FCU-2", "WF3-FCU-3", "WF3-FCU-4", "WF3-FCU-5"];
 var KIND_LBL = { std:'CAHU / CFCU Coil (คอยล์น้ำ)', ref:'SFCU / SAHU Coil (คอยล์น้ำยา)' };
-var PM_UNITS = ["A-FCU-41", "B-FCU-1-1", "B-FCU-1-16", "B-FCU-1-17", "B-FCU-1-2", "B-FCU-1-3", "B-FCU-2-1", "B-FCU-2-10", "B-FCU-2-11", "B-FCU-2-12", "B-FCU-2-13", "B-FCU-2-14", "B-FCU-2-15", "B-FCU-2-2", "B-FCU-2-3", "B-FCU-2-4", "B-FCU-2-5", "B-FCU-2-6", "B-FCU-2-7", "B-FCU-2-8", "B-FCU-2-9", "D-OAHU6", "D-OAHU7", "D-OAHU8", "WF-FCU-06", "WF-FCU-07", "WF-FCU-08", "WF-FCU-1-10", "WF-FCU-1-11", "WF-FCU-1-13", "WF-FCU-1-14", "WF-FCU-1-15", "WF-FCU-1-16", "WF-FCU-1-17", "WF-FCU-1-18", "WF-FCU-1-19", "WF-FCU-1-20", "WF-FCU-1-21", "WF-FCU-1-22", "WF-FCU-1-23", "WF-FCU-1-26", "WF-FCU-1-4", "WF-FCU-1-5", "WF-FCU-1-7", "WF-FCU-1-8", "WF-FCU-1-9", "WF-FCU-14", "WF-FCU-15", "WF-FCU-17", "WF-FCU-21", "WF-FCU-22", "WF3-FCU-1", "WF3-FCU-2", "WF3-FCU-3", "WF3-FCU-4", "WF3-FCU-5"];
+var PM_UNITS = ["A-FCU-41", "B-FCU-1-1", "B-FCU-1-16", "B-FCU-1-17", "B-FCU-1-2", "B-FCU-1-3", "B-FCU-2-1", "B-FCU-2-10", "B-FCU-2-11", "B-FCU-2-12", "B-FCU-2-13", "B-FCU-2-14", "B-FCU-2-15", "B-FCU-2-2", "B-FCU-2-3", "B-FCU-2-4", "B-FCU-2-5", "B-FCU-2-6", "B-FCU-2-7", "B-FCU-2-8", "B-FCU-2-9", "D-OAHU6", "D-OAHU7", "D-OAHU8", "WF-FCU-06", "WF-FCU-07", "WF-FCU-08", "WF-FCU-1-10", "WF-FCU-1-11", "WF-FCU-1-13", "WF-FCU-1-14", "WF-FCU-1-15", "WF-FCU-1-16", "WF-FCU-1-17", "WF-FCU-1-18", "WF-FCU-1-19", "WF-FCU-1-20", "WF-FCU-1-21", "WF-FCU-1-22", "WF-FCU-1-23", "WF-FCU-1-26", "WF-FCU-1-4", "WF-FCU-1-5", "WF-FCU-1-7", "WF-FCU-1-8", "WF-FCU-1-9", "WF-FCU-14", "WF-FCU-15", "WF-FCU-17", "WF-FCU-2-1", "WF-FCU-2-10", "WF-FCU-2-11", "WF-FCU-2-12", "WF-FCU-2-13", "WF-FCU-2-14", "WF-FCU-2-15", "WF-FCU-2-16", "WF-FCU-2-17", "WF-FCU-2-18", "WF-FCU-2-19", "WF-FCU-2-2", "WF-FCU-2-20", "WF-FCU-2-3", "WF-FCU-2-4", "WF-FCU-2-5", "WF-FCU-2-6", "WF-FCU-2-7", "WF-FCU-2-8", "WF-FCU-2-9", "WF-FCU-21", "WF-FCU-22", "WF2-AHU-1", "WF2-AHU-2", "WF2-AHU-3", "WF2-FCU-1-1", "WF2-FCU-1-10", "WF2-FCU-1-11", "WF2-FCU-1-12", "WF2-FCU-1-13", "WF2-FCU-1-14", "WF2-FCU-1-15", "WF2-FCU-1-16", "WF2-FCU-1-17", "WF2-FCU-1-18", "WF2-FCU-1-2", "WF2-FCU-1-3", "WF2-FCU-1-4", "WF2-FCU-1-5", "WF2-FCU-1-6", "WF2-FCU-1-7", "WF2-FCU-1-8", "WF2-FCU-1-9", "WF2-FCU-2-1", "WF3-FCU-1", "WF3-FCU-2", "WF3-FCU-3", "WF3-FCU-4", "WF3-FCU-5"];
 function scopeKindFor(unit){ return REF_UNITS.indexOf(String(unit || '').toUpperCase()) > -1 ? 'ref' : 'std'; }
 function scopeList(kind){ return (kind === 'ref' ? SCOPE_REF : SCOPE_STD).map(function(t){ return { t:t, s:'ok' }; }); }
 
@@ -1032,13 +1032,30 @@ var S = {
 function blank(n){ var a = []; for(var i = 0; i < n; i++) a.push({ img:'', cap:'' }); return a; }
 
 /* ---- draft (เก็บในเครื่อง กันข้อมูลหาย) ---- */
-var KEY = 'mceSonyFcuReportDraft3';
+/* ร่างแยกตามเครื่อง: สแกน QR เครื่องอื่น จะไม่ดึงข้อมูล/รูปของเครื่องก่อนหน้ามาปน */
+var KEY_BASE = 'mceSonyFcuReportDraft3';
+var KEY = (function(){
+  var u = '';
+  try{ u = (new URLSearchParams(location.search).get('unit') || '').trim().toUpperCase(); }catch(e){}
+  if(!u){ var hm = (location.hash || '').match(/^#([A-Za-z0-9-]+)$/); if(hm) u = hm[1].toUpperCase(); }
+  return KEY_BASE + (u ? ':' + u : '');
+})();
+try{ localStorage.removeItem(KEY_BASE); }catch(e){}   /* ร่างรวมแบบเก่า (ไม่แยกเครื่อง) */
+function otherDrafts(){
+  var out = [];
+  try{ for(var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i); if(k && k.indexOf(KEY_BASE + ':') === 0 && k !== KEY) out.push(k); } }catch(e){}
+  return out;
+}
 function saveDraft(){
-  var d = { S:S, f:{} }; FIELDS.forEach(function(id){ d.f[id] = $('#' + id).value; });
-  try{ localStorage.setItem(KEY, JSON.stringify(d)); }
-  catch(e){ /* รูปเยอะจนเต็ม — เก็บเฉพาะข้อความ */
-    try{ var lite = JSON.parse(JSON.stringify(d)); Object.keys(lite.S.photos).forEach(function(k){ lite.S.photos[k].forEach(function(p){ p.img = ''; }); });
-      localStorage.setItem(KEY, JSON.stringify(lite)); }catch(e2){} }
+  var d = { S:S, f:{}, t:Date.now() }; FIELDS.forEach(function(id){ d.f[id] = $('#' + id).value; });
+  var txt = JSON.stringify(d);
+  try{ localStorage.setItem(KEY, txt); return; }catch(e){}
+  /* ที่เก็บเต็ม: ลบร่างของเครื่องอื่นก่อน แล้วลองใหม่ */
+  otherDrafts().forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+  try{ localStorage.setItem(KEY, txt); return; }catch(e){}
+  /* ยังเต็ม (รูปเยอะมาก) — เก็บเฉพาะข้อความ */
+  try{ var lite = JSON.parse(txt); Object.keys(lite.S.photos).forEach(function(k){ lite.S.photos[k].forEach(function(p){ p.img = ''; }); });
+    localStorage.setItem(KEY, JSON.stringify(lite)); }catch(e2){}
 }
 function loadDraft(){
   try{ var d = JSON.parse(localStorage.getItem(KEY)); if(!d) return false;
