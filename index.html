@@ -753,7 +753,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.5;}
 
 /* ---- last page : INDEX_PP sign-off style ---- */
 .pp-in{position:absolute;inset:0;padding:6.6cqw 7.1cqw 0;font-family:'Inter','Noto Sans Thai',sans-serif;}
-.pp-bar{background:var(--navy);color:#fff;font-size:1.55cqw;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:2.1cqw 2.6cqw;margin-bottom:3.6cqw;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.pp-bar{background:var(--navy);color:#fff;font-size:1.55cqw;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:1.25cqw 2.4cqw;margin-bottom:3cqw;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 7cqw;}
 .pp-lbl{font-size:1.38cqw;font-weight:700;letter-spacing:.12em;color:#4A5068;text-transform:uppercase;}
 .pp-val{font-size:1.95cqw;color:#000;border-bottom:.6pt solid #9AA0B4;padding:1.6cqw 0 1.2cqw;margin-bottom:3.6cqw;line-height:1.4;}
@@ -763,7 +763,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.5;}
 .pp-lead{display:inline-block;border:.6pt solid var(--navy);color:var(--navy);border-radius:.6cqw;padding:0 .9cqw;font-size:1.25cqw;font-weight:700;margin-left:.6cqw;vertical-align:middle;}
 .pp-sig{margin-top:1.4cqw;border:.6pt solid #9AA0B4;height:12.4cqw;display:flex;align-items:center;justify-content:center;}
 .pp-sig .sg{width:100%;height:100%;background-size:contain;background-position:center;background-repeat:no-repeat;}
-.pp-ct{position:absolute;left:7.1cqw;bottom:14.2cqw;font-size:1.1cqw;color:#A7ADBE;letter-spacing:.04em;}
+.pp-ct{position:absolute;left:7.1cqw;bottom:10.9cqw;font-size:1.1cqw;color:#A7ADBE;letter-spacing:.04em;}
 .pp-foot{position:absolute;left:7.1cqw;right:7.1cqw;bottom:7.6cqw;display:flex;justify-content:space-between;align-items:baseline;gap:3cqw;border-top:.6pt solid #C2C7DC;padding-top:1cqw;font-size:1.1cqw;color:#5A6178;}
 .pp-foot .l{font-weight:700;color:var(--navy);}
 .pp-foot .r{color:#C94F4F;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
@@ -1232,14 +1232,13 @@ function ppPage(n, inner, extra){ return '<div class="pg pp"><div class="pp-in">
 function ppField(lbl, val){ return '<div><div class="pp-lbl">' + lbl + '</div><div class="pp-val">' + (val ? esc(val) : '&nbsp;') + '</div></div>'; }
 function ppLetterhead(){
   return '<div class="pp-lh"><div class="a"><img src="' + LOGO + '" alt=""><div class="co">' + COMPANY + '</div><div class="ad">FCU / AHU Preventive &amp; Cleansing Service</div></div>' +
-    '<div class="b"><div class="t">FCU / AHU<br>Cleaning Report</div><div class="s">รายงานการล้างทำความสะอาดเครื่องส่งลมเย็น ก่อน · ระหว่าง · หลังทำงาน</div></div>' +
-    '<div class="c"><div class="pp-lbl">Report No.</div><div class="pp-val sm">' + (esc(v('reportNo')) || '&nbsp;') + '</div>' +
-      '<div class="pp-lbl">Date</div><div class="pp-val sm">' + (thDate(v('reportDate')) || '&nbsp;') + '</div></div></div>';
+    '<div class="b"><div class="t">FCU / AHU<br>Cleaning Report</div></div>' +
+    '<div class="c"><div class="pp-lbl">Date</div><div class="pp-val sm">' + (thDate(v('reportDate')) || '&nbsp;') + '</div></div></div>';
 }
 function photoPage(kind, n){
   var K = KIND[kind], L = S.photos[kind], got = L.filter(function(p){ return p.img; }).length;
   return ppPage(n,
-    '<div class="pp-bar">' + K.en + ' WORK<span class="th">รูปภาพ' + K.th + ' (' + got + ' / ' + L.length + ')</span></div>' +
+    '<div class="pp-bar">' + K.en + ' WORK</div>' +
     '<div class="r-photos n' + L.length + '">' + L.map(function(p, i){
       return '<div class="r-ph"><div class="im">' + (p.img ? '<div class="bgi" style="background-image:url(' + p.img + ')"></div>' : '<div class="none">ไม่มีรูป</div>') +
         '<i style="background:' + K.color + '">' + K.en + ' ' + (i + 1) + '</i></div><div class="cap">' + (esc(p.cap) || '&nbsp;') + '</div></div>';
@@ -1263,10 +1262,10 @@ function buildReport(){
   var now = new Date(), ct = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
   var emps = (S.employees || []);
   var summary = ppPage(6,
-    '<div class="pp-bar">Summary<span class="th">สรุปผลการทำงาน</span></div>' +
+    '<div class="pp-bar">Summary</div>' +
     '<div class="pp-lbl">Summary / สรุปผลการทำงาน และข้อเสนอแนะ</div>' +
     '<div class="pp-val pp-sum">' + (esc(v('summary')) || '&nbsp;') + '</div>' +
-    '<div class="pp-bar" style="margin-top:5cqw">Sign off<span class="th">ลงนามรับงาน</span></div>' +
+    '<div class="pp-bar" style="margin-top:5cqw">Sign off</div>' +
     '<div class="pp-grid">' +
       '<div><div class="pp-lbl">List of employees / ชื่อผู้ให้บริการ</div><div class="pp-emps">' +
         emps.map(function(nm, k){ return '<div>' + esc(nm) + (k === 0 ? ' <span class="pp-lead">หัวหน้างาน</span>' : '') + '</div>'; }).join('') + '</div></div>' +
@@ -1713,7 +1712,7 @@ function cover3(n, D){
       '<path d="M0 104 C25 96 45 112 70 104 C85 99 93 100 100 102 L100 141.4 L0 141.4Z" fill="#22A45D" opacity=".35"/>' +
       '<path d="M0 110 C25 102 50 118 75 110 C88 106 95 107 100 108 L100 141.4 L0 141.4Z" fill="#16264A"/></svg>' +
       '<div class="inr"><div class="lgrow">' + mce + custImg(D) + '</div><div class="eb">' + esc(D.no || 'SERVICE REPORT') + '</div>' +
-      '<h1 class="ttl">' + TTL + '</h1><div class="sub-th">' + SUBTH + '</div><div class="fl2">' + all6 + '</div></div>' +
+      '<h1 class="ttl">' + TTL + '</h1><div class="fl2">' + all6 + '</div></div>' +
       (v('unitId') ? '<div class="wq">' + qrB() + '</div>' : '') + '<div class="wft">' + ft + '</div></div>';
   case 36: return '<div class="pg c36"><div class="inr"><div class="lgrow">' + mce + custImg(D) + '</div>' +
       '<div class="eb">' + esc(D.no || 'SERVICE REPORT') + '</div><h1 class="ttl">' + TTL.replace('<br>', ' ') + '</h1>' +
